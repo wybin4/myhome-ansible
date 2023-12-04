@@ -1,0 +1,93 @@
+---
+- name: Установка Docker
+  become: yes
+  block:
+    - name: Добавляем universe
+      apt_repository:
+        repo: "deb http://us.archive.ubuntu.com/ubuntu/ {{ ansible_distribution_release }} universe"
+        state: present
+
+    - name: Установка дополнительных пакетов
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - python3-pip
+        update-cache: true
+        cache_valid_time: 86400
+
+    - name: Создание директории /etc/apt/keyrings
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+
+    - name: Добавление ключа Docker
+      uri:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.gpg
+        method: GET
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
+
+    - name: Импорт ключа Docker GPG
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        keyring: /etc/apt/trusted.gpg.d/docker.gpg
+        state: present
+
+    - name: Добавление стабильного репозитория Docker
+      apt_repository:
+        repo: >
+          deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/docker.gpg]
+          https://download.docker.com/linux/ubuntu
+          {{ ansible_facts['distribution_release'] }} stable
+        state: present
+        update_cache: yes
+        filename: docker
+
+    - name: Установка Docker-ce
+      apt:
+        name: docker-ce
+        update-cache: true
+
+    - name: Проверка что Docker установлен и перезагружен
+      service:
+        name: docker
+        state: restarted
+        enabled: true
+
+- name: Установка Docker-compose
+  become: yes
+  block:
+    - name: Получение последней версии Docker-compose
+      uri:
+        url: https://api.github.com/repos/docker/compose/releases/latest
+        body_format: json
+      register: page
+
+    - name: Установка Docker-compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/{{ page.json.tag_name }}/docker-compose-Linux-x86_64"
+        dest: /usr/local/bin/docker-compose
+        mode: 0755
+
+- name: Настройка дополнительных пакетов python
+  block:
+    - name: Установка pip пакетов
+      pip:
+        name: docker
+
+- name: Завершение установки
+  become: yes
+  block:
+    - name: Добавление пользователя в группу Docker
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+
+    - name: Перезагрузка
+      reboot:

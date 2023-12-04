@@ -1,0 +1,3 @@
+---
+- name: "[{{ name }}]: Выкладка сервиса"
+  include: "../service-create.yml"

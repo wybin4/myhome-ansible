@@ -1,0 +1,37 @@
+---
+- name: "[{{ name }}]: Конфигурация"
+  block:
+    - name: "[{{ name }}]: Создание конфига"
+      include: "../config-create.yml"
+      loop:
+        - nginx.conf
+      loop_control:
+        loop_var: config_item
+  tags: "{{ name }}"
+  
+  rescue:
+    - name: "[{{ name }}]: Удаляем сервис"
+      community.docker.docker_swarm_service:
+        name: "{{ name }}"
+        state: absent
+    - name: "[{{ name }}]: Создание конфига"
+      include: "config-create.yml"
+
+- name: "[{{ name }}] Выкладка сервиса"
+  block:
+    - name: "[{{ name }}] Выкладываем сервис"
+      community.docker.docker_swarm_service:
+        name: "{{ name }}"
+        image: "nginx:{{ version }}"
+        state: present
+        networks:
+          - name: "{{ network_name }}"
+        publish:
+          - mode: ingress
+            protocol: tcp
+            published_port: 3003
+            target_port: 3003
+        configs:
+          - config_name: nginx.conf
+            filename: "/etc/nginx/nginx.conf"
+  tags: "{{ name }}"

@@ -1,0 +1,75 @@
+---
+- name: Сборка бэкенда
+  block:
+    - name: Клонирование бэкенд-репозитория
+      ansible.builtin.git:
+        repo: 'https://github.com/wybin4/myhome.git'
+        dest: "{{ git_folder }}"
+        version: master
+
+    - name: Собираем бэкенд-images
+      community.docker.docker_image:
+        name: "{{ registry_name }}{{ item.name }}"
+        tag: "{{ item.version }}"
+        push: true
+        force_source: true
+        force_tag: true
+        build:
+          path: "{{ git_folder }}"
+          dockerfile: "{{ git_folder }}/apps/{{ item.name }}/Dockerfile"
+        source: build
+      loop: "{{ services | difference(non_build_services) }}"
+
+    - name: Удаление бэкенд-репозитория
+      file:
+        state: absent
+        path: "{{ git_folder }}"
+
+# - name: Сборка фронтенда
+#   block:
+#     - name: Клонирование фронтенд-репозитория
+#       ansible.builtin.git:
+#         repo: 'https://github.com/wybin4/myhome-frontend.git'
+#         dest: "{{ git_folder }}"
+#         version: master
+
+#     - name: Сборка фронтенд-image
+#       community.docker.docker_image:
+#         name: "{{ registry_name }}{{ item.name }}"
+#         tag: "{{ item.version }}"
+#         push: true
+#         force_source: true
+#         force_tag: true
+#         build:
+#           path: "{{ git_folder }}"
+#           dockerfile: "{{ git_folder }}/Dockerfile"
+#         source: build
+#         loop: "{{ frontend_services }}"
+
+#     - name: Удаление фронтенд-репозитория
+#       file:
+#         state: absent
+#         path: "{{ git_folder }}"
+
+- name: Сборка фронтенда
+  block:
+    - name: Скачиваем image с ghcr.io
+      docker_image:
+        name: "ghcr.io/wybin4/frontend:latest"
+        state: present
+
+    - name: Изменяем тег скачанного image
+      docker_image:
+        name: "localhost:5000/frontend:latest"
+        source: "ghcr.io/wybin4/frontend:latest"
+        force: yes
+
+    - name: Удаляем скачанный image
+      docker_image:
+        name: "ghcr.io/wybin4/frontend"
+        state: absent
+
+    - name: Добавляем в localhost:5000
+      docker_image:
+        name: "localhost:5000/frontend:latest"
+        state: present

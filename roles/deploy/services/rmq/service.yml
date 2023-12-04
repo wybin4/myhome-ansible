@@ -1,0 +1,14 @@
+---
+- name: "[{{ name }}] Выкладка сервиса"
+  block:
+    - name: "[{{ name }}] Выкладываем сервис"
+      community.docker.docker_swarm_service:
+        name: "{{ name }}"
+        image: "rabbitmq:{{ version }}"
+        state: present
+        networks:
+          - name: "{{ network_name }}"
+        env:
+          - RABBITMQ_DEFAULT_USER={{ rmq.user }}
+          - RABBITMQ_DEFAULT_PASS={{ rmq.password }}
+  tags: "{{ name }}"

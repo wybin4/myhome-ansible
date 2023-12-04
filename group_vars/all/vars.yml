@@ -1,0 +1,80 @@
+---
+rmq_defaults:
+  - name: AMQP_EXCHANGE
+    value: myhome
+  - name: AMQP_USER
+    value: "{{ rmq.user }}"
+  - name: AMQP_PASSWORD
+    value: "{{ rmq.password }}"
+  - name: AMQP_HOSTNAME
+    value: rmq
+
+mysql_defaults:
+  - name: MYSQL_USERNAME
+    value: root
+  - name: MYSQL_PASSWORD
+    value: "{{ mysql.password }}"
+  - name: MYSQL_HOST
+    value: mysql
+  - name: MYSQL_PORT
+    value: 3306
+
+mongo_defaults:
+  - name: MONGO_LOGIN
+    value: "{{ mongo.user }}"
+  - name: MONGO_PASSWORD
+    value: "{{ mongo.password }}"
+  - name: MONGO_HOST
+    value: mongo
+  - name: MONGO_PORT
+    value: 27017
+  - name: MONGO_AUTHDATABASE
+    value: "{{ mongo.password }}"
+
+registry_name: localhost:5000/
+
+services:
+  - name: api
+    version: latest
+  - name: reference
+    version: latest
+  - name: event
+    version: latest
+  - name: account
+    version: latest
+  - name: single-payment-document
+    version: latest
+  - name: document-detail
+    version: latest
+  - name: payment
+    version: latest
+  - name: email
+    version: latest
+  - name: correction
+    version: latest
+  - name: chat
+    version: latest
+  - name: rmq
+    version: 3-management
+  - name: mysql
+    version: 8
+  - name: mongo
+    version: 4.4.4
+  - name: nginx
+    version: latest
+  - name: frontend
+    version: latest
+
+non_build_services:
+  - name: frontend
+    version: latest
+  - name: rmq
+    version: 3-management
+  - name: mysql
+    version: 8
+  - name: mongo
+    version: 4.4.4
+  - name: nginx
+    version: latest
+
+advertise_addr: 10.11.10.1

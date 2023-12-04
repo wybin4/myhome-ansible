@@ -1,0 +1,27 @@
+---
+- name: Создание registry
+  block:
+    - name: Создание папки
+      file:
+        path: /home/vagrant/registry
+        state: directory
+        mode: '0755'
+    - name: Создание registry
+      community.docker.docker_swarm_service:
+        name: registry
+        image: registry:latest
+        state: present
+        publish:
+          - mode: ingress
+            protocol: tcp
+            published_port: 5000
+            target_port: 5000
+        mounts:
+          - type: bind
+            source: /home/vagrant/registry
+            target: /var/lib/registry
+        env:
+          REGISTRY_HTTP_ADDR: "0.0.0.0:5000"
+        placement:
+          constraints:
+            - "node.hostname == {{ host_name }}"

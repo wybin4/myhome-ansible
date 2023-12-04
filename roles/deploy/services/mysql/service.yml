@@ -1,0 +1,34 @@
+---
+- name: "[{{ name }}] Выкладка сервиса"
+  block:
+    - name: Копирование файла для инициализации
+      copy:
+        src: init.sql
+        dest: /home/vagrant/init.sql
+    - name: Создание папки
+      file:
+        path: /home/vagrant/mysql
+        state: directory
+        mode: '0755'
+    - name: "[{{ name }}] Выкладываем сервис"
+      community.docker.docker_swarm_service:
+        name: "{{ name }}"
+        image: "{{ name }}:{{ version }}"
+        state: present
+        networks:
+          - name: "{{ network_name }}"
+        env:
+          - MYSQL_ROOT_PASSWORD={{ mysql.password }}
+          - MYSQL_USER={{ mysql.user }}
+          - MYSQL_PASSWORD={{ mysql.password }}
+        mounts:
+          - type: bind
+            source: /home/vagrant/mysql
+            target: /var/run/mysqld
+          - type: bind
+            source: /home/vagrant/init.sql
+            target: /docker-entrypoint-initdb.d/init.sql
+        placement:
+          constraints:
+            - "node.hostname == {{ host_name }}"
+  tags: "{{ name }}"

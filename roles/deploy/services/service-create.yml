@@ -1,0 +1,20 @@
+---
+- name: "[{{ name }}]: Конфигурация секрета"
+  include: "./secret-config.yml"
+
+- name: "[{{ name }}]: Выкладка сервиса"
+  vars:
+    secret_name: "{{ name | regex_replace('[^a-zA-Z0-9]', '_') }}"
+  block:
+    - name: "[{{ name }}]: Выкладка сервиса"
+      community.docker.docker_swarm_service:
+        name: "{{ name }}"
+        image: "{{ registry_name }}{{ name }}:{{ version }}"
+        state: present
+        force_update: true
+        networks:
+          - name: "{{ network_name }}"
+        secrets:
+          - secret_name: "{{ secret_name }}"
+            filename: "/opt/app/envs/.{{ name }}.env"
+  tags: "{{ name }}"
