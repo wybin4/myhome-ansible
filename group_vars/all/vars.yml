@@ -31,6 +31,12 @@ mongo_defaults:
   - name: MONGO_AUTHDATABASE
     value: "{{ mongo.password }}"
 
+redis_defaults:
+  - name: REDIS_HOST
+    value: redis
+  - name: REDIS_PORT
+    value: 6379
+
 registry_name: localhost:5000/
 
 services:
@@ -60,6 +66,8 @@ services:
     version: 8
   - name: mongo
     version: 4.4.4
+  - name: redis
+    version: latest
   - name: nginx
     version: latest
   - name: frontend

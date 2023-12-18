@@ -1,0 +1,23 @@
+---
+- name: "[{{ name }}] Выкладка сервиса"
+  block:
+    - name: Создание папки
+      file:
+        path: /home/vagrant/redis
+        state: directory
+        mode: '0755'
+    - name: "[{{ name }}] Выкладываем сервис"
+      community.docker.docker_swarm_service:
+        name: "{{ name }}"
+        image: "{{ name }}:{{ version }}"
+        state: present
+        networks:
+          - name: "{{ network_name }}"
+        mounts:
+          - type: bind
+            source: /home/vagrant/redis
+            target: /var/lib/redis
+        placement:
+          constraints:
+            - "node.hostname == {{ host_name }}"
+  tags: "{{ name }}"
